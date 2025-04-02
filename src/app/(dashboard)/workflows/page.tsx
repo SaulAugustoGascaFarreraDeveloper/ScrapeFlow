@@ -5,6 +5,8 @@ import { waitFor } from '@/lib/helper/waitFor'
 import { AlertCircle,InboxIcon,Loader2} from 'lucide-react'
 import React, { Suspense } from 'react'
 import CreateWorkflowDialog from './_components/create-workflow-dialog'
+import WorkflowCard from './_components/workflow-card'
+import { Workflow } from '@prisma/client'
 
 const Workflows = () => {
   return (
@@ -76,15 +78,14 @@ async function Userworkflows() {
                 <CreateWorkflowDialog triggerText='Create your first workflow' />
             </div>
         )
-    }else{
-        return(<>
-            {JSON.stringify(workflows.workflows)}
-        </>)
     }
 
     return (
-      <div className=''>
-               
+      <div className='grid grid-cols-1 gap-4'>
+        {workflows.workflows?.map((data,index) => (
+            
+            <WorkflowCard key={data.id} workflow={data} />
+        ))}
       </div>
     );
   }

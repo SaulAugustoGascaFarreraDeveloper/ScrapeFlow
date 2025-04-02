@@ -48,7 +48,10 @@ const CreateWorkflowDialog = ({triggerText} : CreateWorkflowDialogProps) => {
     const {handleSubmit,loading,methods} = useCreateWorkflow()
 
   return (
-    <Dialog open={open} onOpenChange={setOpen} >
+    <Dialog open={open} onOpenChange={(open) => {
+        methods.reset()
+        setOpen(open)
+    }} >
         <DialogTrigger asChild >
             <Button>
                 {triggerText ?? "Create Workflow"}

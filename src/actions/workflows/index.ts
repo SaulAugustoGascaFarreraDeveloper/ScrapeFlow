@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma"
 import { CreateWorkflowProps, CreateWorkflowSchema } from "@/schemas/workflows"
 import { WorkflowStatus } from "@/types"
 import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 
 export const onGetWorkflowsForUser = async () => {
 
@@ -86,6 +86,62 @@ export const onCreateWorkflow = async (form: CreateWorkflowProps) => {
     {
         console.log("On Create Workflow Error -->",error)
         return{status: 500,message:"Internal Server Error !!"}
+    }
+
+}
+
+
+export const onDeleteWorkflow = async (id: string) => {
+
+    try{
+
+        const {userId} = await auth()
+
+        if(!userId)
+            {
+                return {status: 403,message:"Unauthorized"}
+            }
+
+        const deletedWorkflow = await prisma.workflow.delete({
+            where:{
+                userId: userId as string,
+                id: id as string
+            }
+        })
+
+
+        if(deletedWorkflow)
+        {
+            revalidatePath('/workflows')
+            return {status: 200,message:"workflow deleted succesfully !!"}
+        }
+
+        return {status: 404,message:"Failed to delete workflow !!"}
+
+    }catch(error){
+        console.log("On Delte Workflow Error -->" ,error)
+        return {status: 500,message:"Internal Server Error !!"}
+    }
+
+}
+
+
+export const onGetWorkflow = async (id: string,userId: string) => {
+
+    try{
+
+        const workflowData = await prisma.workflow.findUnique({
+            where:{
+                id: id,
+                userId: userId
+            }
+        })
+
+        return workflowData
+
+    }catch(error)
+    {
+        console.log('On Get Workflow Error --> ',error)
     }
 
 }

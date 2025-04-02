@@ -6,6 +6,8 @@ import { useCallback, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { onCreateWorkflow } from "@/actions/workflows"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+
 
 
 export const useCreateWorkflow = () => {
@@ -23,15 +25,15 @@ export const useCreateWorkflow = () => {
     const {mutate: createWorkflowMutate,isPending} = useMutation({
         mutationFn: onCreateWorkflow,
         onSuccess: (data) => {
-            //toast.success('Workflow craeted',{id: 'create-workflow'})
-            console.log("workfloe created !!")
+            toast.success('Workflow created',{id: 'create-workflow'})
+            //console.log("workfloe created !!")
 
             router.push(`/workflow/editor/${data.workflow?.id}`)
 
         },
         onError: () => {
-            //toast.error('Failed to create workflow',{id: 'create-workflow'})
-            console.log("workfloe failedddddd !!")
+            toast.error('Failed to create workflow',{id: 'create-workflow'})
+            //console.log("workfloe failedddddd !!")
         }
     })
 
