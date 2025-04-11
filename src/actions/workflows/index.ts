@@ -1,9 +1,11 @@
 "use server"
 
 import prisma from "@/lib/prisma"
+import { CreateFlowNode } from "@/lib/workflow/create-flow-node"
 import { CreateWorkflowProps, CreateWorkflowSchema } from "@/schemas/workflows"
-import { WorkflowStatus } from "@/types"
+import { AppNode, TaskType, WorkflowStatus } from "@/types"
 import { auth } from "@clerk/nextjs/server"
+import { Edge } from "@xyflow/react"
 import { revalidatePath } from "next/cache"
 
 export const onGetWorkflowsForUser = async () => {
@@ -44,6 +46,15 @@ export const onGetWorkflowsForUser = async () => {
 }
 
 
+const initialFlow: { nodes: AppNode[], edges: Edge[] } = {
+    nodes:[],
+    edges: []
+}
+
+//lets add nodes to entry point
+initialFlow.nodes.push(CreateFlowNode(TaskType.LAUNCH_BROWSER))
+
+
 export const onCreateWorkflow = async (form: CreateWorkflowProps) => {
 
     try{
@@ -66,7 +77,7 @@ export const onCreateWorkflow = async (form: CreateWorkflowProps) => {
             data:{
                 userId: user.userId,
                 status: WorkflowStatus.DRAFT,
-                definition:'TODO',
+                definition: JSON.stringify(initialFlow),
                 ...data
 
             }
@@ -142,6 +153,53 @@ export const onGetWorkflow = async (id: string,userId: string) => {
     }catch(error)
     {
         console.log('On Get Workflow Error --> ',error)
+    }
+
+}
+
+
+export const onUpdateWorkflow = async ({id,definition} :{id: string,definition :string}) => {
+
+    try{
+
+        const {userId} = auth()
+
+
+        if(!userId) return {status: 403,message: "Unauthorized"}
+
+        const workflow = await prisma.workflow.findUnique({
+            where:{
+                id: id,
+                userId: userId
+            }
+        })
+
+        if(!workflow || workflow.status !== WorkflowStatus.DRAFT)
+        {
+            return {status: 404,message:"Failed to Get Workflow or Workflow is not a draft!!"}
+        }
+
+        const updatedWorkflow = await prisma.workflow.update({
+            where:{
+                id: id,
+                userId: userId
+            },
+            data:{
+                definition: definition
+            }
+        })
+
+        if(updatedWorkflow)
+        {
+            return {status: 200,message:"Workflow updated succesfully !!"}
+        }
+
+
+    }catch(error)
+    {
+        console.log("On Update Workflow Error --> ",error)
+
+        return {status:500, message: "Internal Server Error"}
     }
 
 }
