@@ -1,5 +1,5 @@
 'use client'
-import { Input,In} from '@/components/ui/input'
+import { Input} from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ParamProps, TaskParam } from '@/types'
@@ -7,35 +7,35 @@ import React, { useEffect, useId, useState } from 'react'
 
 
 
-const StringParam = ({param,value,updateNodeParamValue} : ParamProps) => {
+const StringParam = ({param,value,updateNodeParamValue,disabled} : ParamProps) => {
 
     const [internalValue,setInternalValue] = useState(value)
 
 
-  const id = useId()
+        const id = useId()
 
 
-  useEffect(() => {
+        useEffect(() => {
 
-    setInternalValue(value)
+          setInternalValue(value)
 
-  },[value])
+        },[value])
 
-  type InputProps = React.ComponentProps<typeof Input>
-  type TextareaProps = React.ComponentProps<typeof Textarea>
+        type InputProps = React.ComponentProps<typeof Input>
+        type TextareaProps = React.ComponentProps<typeof Textarea>
 
-  
+        
 
-  type DynamicComponentProps = InputProps | TextareaProps
+        type DynamicComponentProps = InputProps | TextareaProps
 
-  let Component: React.ElementType<DynamicComponentProps>
+        let Component: React.ElementType<DynamicComponentProps>
 
-  if(param.variant === "textarea")
-  {
-    Component = Textarea
-  }else{
-    Component = Input
-  }
+        if(param.variant === "textarea")
+        {
+          Component = Textarea
+        }else{
+          Component = Input
+        }
 
   return (
     <div className='space-y-1 w-full p-1'>
@@ -45,9 +45,10 @@ const StringParam = ({param,value,updateNodeParamValue} : ParamProps) => {
         </Label>
         <Component id={id} value={internalValue} 
             placeholder='Enter value here' 
-            onChange={(e) => setInternalValue(e.target.value)} 
-            onBlur={(e) => updateNodeParamValue(e.target.value)}
+            onChange={(e: any) => setInternalValue(e.target.value)} 
+            onBlur={(e: any) => updateNodeParamValue(e.target.value)}
             className='text-xs'
+            disabled={disabled}
         />
         {param.helperText && (
             <p className='text-muted-foreground px-2'>{param.helperText}</p>

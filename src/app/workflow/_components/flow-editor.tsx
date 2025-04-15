@@ -1,4 +1,4 @@
-import { addEdge, Background, BackgroundVariant, Connection, Controls, Edge, ReactFlow, useEdgesState, useNodesState, useReactFlow } from '@xyflow/react'
+import { addEdge, Background, BackgroundVariant, Connection, Controls, Edge, getOutgoers, ReactFlow, useEdgesState, useNodesState, useReactFlow } from '@xyflow/react'
 import React, { useCallback, useEffect } from 'react'
 import "@xyflow/react/dist/style.css"
 import { Workflow } from '@prisma/client'
@@ -8,6 +8,7 @@ import NodeComponent from './nodes/node-component'
 import { TestFlowNode } from '@/lib/workflow/test-flow-node'
 import TestNodeComponent from './nodes/test-node-component'
 import DeletableEdge from './edges/deletable-edge'
+import { TaskRegistry } from '@/lib/workflow/task/registry'
 
 type FlowEditorProps = {
     workflow: Workflow
@@ -107,7 +108,7 @@ const FlowEditor = ({workflow} : FlowEditorProps) => {
 
       setNodes(nds => nds.concat(newNode))
 
-    },[])
+    },[screenToFlowPosition,setNodes])
 
     const onConnect = useCallback((connection: Connection) => {
 
@@ -130,12 +131,68 @@ const FlowEditor = ({workflow} : FlowEditorProps) => {
         }
       })
 
-      console.log('@updated node',node.id)
+      //console.log('@updated node',node.id)
 
     },[setEdges,updateNodeData,nodes])
 
 
-    console.log("@nodes",nodes)
+    const isValidConnection = useCallback((connection: Edge  | Connection) => {
+
+      //No self connections allowed
+
+      if(connection.source === connection.target)
+      {
+        return false
+      }
+
+
+      //same task param type connection
+      const source = nodes.find((nds) => nds.id === connection.source)
+
+      const target = nodes.find((nds) => nds.id === connection.target)
+
+      if(!source || !target) return false
+
+
+      const sourceTask = TaskRegistry[source.data.type]
+
+      const targetTask = TaskRegistry[target.data.type]
+
+
+      const output = sourceTask.outputs.find((o) => o.name === connection.sourceHandle)
+
+      const input = targetTask.inputs.find((o) => o.name === connection.targetHandle)
+
+      //console.log("@DEBUG",{input,output})
+
+
+      if(input?.type !== output?.type)
+      {
+        return false
+      }
+
+      const hasCycle = (node: AppNode,visited = new Set()) => {
+        if(visited.has(node.id)) return false
+        
+        visited.add(node.id)
+
+        for(const outgoer of getOutgoers(node,nodes,edges))
+        {
+            if(outgoer.id === connection.source) return true
+            if(hasCycle(outgoer,visited)) return false
+        }
+
+      }
+
+      const detectCycle = hasCycle(target)
+
+      return !detectCycle
+
+
+    },[nodes,edges])
+
+
+    //console.log("@nodes",nodes)
 
   return (
     <main className='w-full h-full'>
@@ -152,6 +209,7 @@ const FlowEditor = ({workflow} : FlowEditorProps) => {
         onDragOver={onDragOver}
         onDrop={onDrop}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
         >
             <Controls position='top-left' fitViewOptions={fitViewOptions} />
             <Background variant={BackgroundVariant.Dots} color='black' gap={12} size={1} />

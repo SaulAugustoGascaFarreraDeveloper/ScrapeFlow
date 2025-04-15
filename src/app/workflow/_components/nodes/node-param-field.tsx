@@ -7,7 +7,7 @@ import StringParam from './param/string-param'
 import { useReactFlow } from '@xyflow/react'
 import BrowserInstanceParam from './param/browser-instance-param'
 
-const NodeParamField = ({param,nodeId}:{param:TaskParam,nodeId: string}) => {
+const NodeParamField = ({param,nodeId,disabled}:{param:TaskParam,nodeId: string,disabled: boolean}) => {
 
     const {updateNodeData,getNode} = useReactFlow()
 
@@ -35,7 +35,7 @@ const NodeParamField = ({param,nodeId}:{param:TaskParam,nodeId: string}) => {
     {
         case TaskParamType.STRING:
             return (
-                <StringParam param={param} value={value} updateNodeParamValue={updateNodeParamValue} />
+                <StringParam param={param} value={value} updateNodeParamValue={updateNodeParamValue} disabled={disabled} />
             )
         case TaskParamType.BROWSER_INSTANCE:
             return(
